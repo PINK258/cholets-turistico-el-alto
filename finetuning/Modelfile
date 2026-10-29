@@ -1,0 +1,14 @@
+# Modelo afinado para Ollama. Crear con (en esta carpeta, junto a cholets-qwen.gguf):
+#   ollama create cholets-qwen -f Modelfile
+FROM ./cholets-qwen.gguf
+
+# Plantilla de chat de Qwen2.5 (ChatML), la misma usada en el entrenamiento.
+TEMPLATE """{{- range .Messages }}<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+"""
+
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER temperature 0.3
+PARAMETER num_ctx 4096

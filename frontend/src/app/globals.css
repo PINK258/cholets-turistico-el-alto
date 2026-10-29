@@ -1,0 +1,421 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --morado: #6117ab;
+  --morado-oscuro: #3a0f66;
+  --morado-claro: #f1e3ff;
+}
+
+body {
+  background-color: #ffffff;
+  color: #1f1330;
+  font-family: var(--fuente-texto), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-titulo {
+  font-family: var(--fuente-titulos), var(--fuente-texto), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+body {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+/* El hero de la portada conserva su letra y sus tamaños originales. */
+.letra-sistema,
+.letra-sistema h1,
+.letra-sistema h2,
+.letra-sistema h3 {
+  font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  letter-spacing: normal;
+}
+.letra-sistema {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.letra-sistema .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.letra-sistema .text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* ---------- Animaciones (solo transform y opacity: fluidas en celulares) ---------- */
+
+/* Aparicion al hacer scroll: <Revelar> agrega "visible" una sola vez. */
+.revelar {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--retraso, 0ms);
+}
+.revelar.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Titulo de seccion: linea amarilla que se dibuja de izquierda a derecha. */
+.titulo-seccion {
+  font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: #3a0f66;
+}
+.linea-acento {
+  display: block;
+  height: 4px;
+  width: 56px;
+  margin-top: 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f0b429, #c1502e);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+.visible .linea-acento,
+.linea-acento.visible {
+  transform: scaleX(1);
+}
+
+/* Esqueleto de carga con brillo. */
+.esqueleto {
+  position: relative;
+  overflow: hidden;
+  background: #f1e3ff;
+}
+.esqueleto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: brillo 1.3s ease-in-out infinite;
+}
+@keyframes brillo {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Corazon de favorito: rebote al guardarlo. */
+.latido {
+  animation: latido 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes latido {
+  40% {
+    transform: scale(1.35);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+}
+
+/* Icono de un estado vacio: flota suave. */
+.flotar {
+  animation: flotar 3s ease-in-out infinite;
+}
+@keyframes flotar {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revelar,
+  .linea-acento {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .esqueleto::after,
+  .flotar,
+  .latido {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Todo lo que sigue va en la capa "components" de Tailwind. Sin esto, estas
+   reglas quedan fuera del sistema de capas y terminan apareciendo DESPUES de
+   "@tailwind utilities" en el CSS final -> ganan por orden de aparicion a
+   utilidades como max-w-md, w-1/2, etc. aunque tengan la misma especificidad.
+   Eso es lo que hacia que el formulario de login (contenedor + max-w-md)
+   se viera a 1200px de ancho en vez de los ~448px esperados. */
+@layer components {
+  .contenedor {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+  }
+
+  /* Tarjeta estilo Airbnb: foto grande redondeada, sin recuadro; al pasar el
+     cursor se eleva con sombra morada suave y la foto hace zoom lento. */
+  .tarjeta-local {
+    @apply bg-white rounded-2xl shadow-card border border-morado-100 overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-flotante hover:border-morado-200 active:scale-[0.98];
+  }
+
+  /* Botones (estilo Awwwards): esquinas de 12 px y un relleno que sube desde
+     abajo al pasar el cursor (solo transform: fluido en celulares). Al tocar,
+     una pequeña presion. */
+  .boton-primario,
+  .boton-secundario,
+  .boton-primario-sm,
+  .boton-secundario-sm {
+    @apply relative isolate overflow-hidden inline-flex items-center justify-center gap-2 font-semibold
+      transition-[color,border-color,transform] duration-300 ease-out
+      active:scale-[0.97]
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morado-400 focus-visible:ring-offset-2
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .boton-primario::before,
+  .boton-secundario::before,
+  .boton-primario-sm::before,
+  .boton-secundario-sm::before {
+    content: '';
+    @apply absolute inset-0 -z-10 translate-y-full transition-transform duration-[400ms];
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .boton-primario:hover::before,
+  .boton-secundario:hover::before,
+  .boton-primario-sm:hover::before,
+  .boton-secundario-sm:hover::before {
+    @apply translate-y-0;
+  }
+
+  .boton-primario {
+    @apply rounded-xl px-6 py-3 text-white bg-morado-700;
+  }
+  .boton-primario-sm {
+    @apply rounded-xl px-4 py-2 text-sm text-white bg-morado-700;
+  }
+  .boton-primario::before,
+  .boton-primario-sm::before {
+    @apply bg-morado-900;
+  }
+
+  .boton-secundario {
+    @apply rounded-xl px-6 py-3 bg-white text-morado-800 border border-morado-200;
+  }
+  .boton-secundario-sm {
+    @apply rounded-xl px-4 py-2 text-sm bg-white text-morado-800 border border-morado-200;
+  }
+  .boton-secundario::before,
+  .boton-secundario-sm::before {
+    @apply bg-morado-700;
+  }
+  .boton-secundario:hover,
+  .boton-secundario-sm:hover {
+    @apply text-white border-morado-700;
+  }
+
+  /* Filtro de zonas: pastillas sobrias; la elegida en morado oscuro. */
+  .chip-zona {
+    @apply whitespace-nowrap rounded-full border border-morado-200 bg-white px-4 py-2 text-sm font-medium text-morado-800
+      transition-colors duration-300 hover:border-morado-700 active:scale-[0.97];
+  }
+  .chip-zona-activa {
+    @apply border-morado-900 bg-morado-900 text-white hover:border-morado-900;
+  }
+
+  /* Enlace de texto con subrayado que se dibuja y flecha que avanza. */
+  .boton-texto {
+    @apply inline-flex items-center gap-1.5 text-morado-700 font-semibold transition-colors hover:text-morado-900;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1.5px no-repeat;
+    transition: background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s;
+  }
+  .boton-texto:hover {
+    background-size: 100% 1.5px;
+  }
+  .flecha {
+    @apply inline-block transition-transform duration-300;
+  }
+  .group:hover .flecha,
+  .boton-texto:hover .flecha,
+  .boton-primario:hover .flecha,
+  .boton-secundario:hover .flecha {
+    @apply translate-x-1;
+  }
+
+  .input-campo {
+    @apply w-full rounded-lg border border-morado-200 px-3.5 py-2 text-sm text-morado-900
+      placeholder:text-morado-300 transition-colors
+      focus:outline-none focus:ring-1 focus:ring-morado-500 focus:border-morado-500;
+  }
+
+  .etiqueta-campo {
+    @apply block text-xs font-semibold text-morado-700 mb-1;
+  }
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 1rem;
+  /* Cada mapa es su propia capa: Leaflet usa z-index 400-1000 por dentro y,
+     sin esto, al bajar la pagina el mapa pasaba por encima del menu, del
+     chatbot y de otros elementos. */
+  isolation: isolate;
+}
+
+/* Franja decorativa de inspiracion andina (colores de aguayo/textiles del
+   altiplano boliviano). Puramente ornamental, para reforzar identidad local. */
+.franja-andina {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    #c1502e 0, #c1502e 12.5%,
+    #f0b429 12.5%, #f0b429 25%,
+    #4f1489 25%, #4f1489 37.5%,
+    #1f8a5f 37.5%, #1f8a5f 50%
+  );
+  background-size: 160px 100%;
+}
+
+/* Nombre del distrito dentro de su limite en los mapas de Leaflet. */
+.leaflet-tooltip.etiqueta-distrito {
+  background: rgba(255, 255, 255, 0.75);
+  border: none;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #3a0f66;
+  padding: 1px 6px;
+}
+.leaflet-tooltip.etiqueta-distrito::before {
+  display: none;
+}
+
+/* ---- Pin con la foto del cholet en el mapa (lib/mapaBase.ts, iconoFoto) ---- */
+.pin-foto {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #6117ab; /* se ve si la foto no carga */
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px #6117ab, 0 6px 14px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  transform-origin: 50% 118%;
+}
+.pin-foto::before {
+  /* Si no hay foto: icono de casa centrado debajo de la imagen. */
+  content: '🏠';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+}
+.pin-foto::after {
+  /* Punta del pin que señala el lugar exacto. */
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 12px solid #6117ab;
+}
+.pin-foto__img {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+}
+.leaflet-marker-icon:hover .pin-foto,
+.leaflet-marker-icon:focus .pin-foto {
+  transform: scale(1.12);
+}
+
+/* Ventana al tocar el pin: foto grande del local. */
+.popup-local .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+.popup-local .leaflet-popup-content {
+  margin: 0;
+  width: 240px !important;
+}
+.popup-local__foto {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background: #f3ecfb;
+}
+.popup-local__cuerpo {
+  padding: 10px 12px 12px;
+}
+.popup-local__nombre {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  color: #3a0f66;
+}
+.popup-local__boton {
+  margin-top: 8px;
+  width: 100%;
+  border-radius: 9999px;
+  background: #6117ab;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+.popup-local__boton:hover {
+  background: #4c0f88;
+}
+
+/* ---- Carrusel de la portada (components/CarruselInicio.tsx) ---- */
+/* El texto de cada diapositiva entra subiendo, uno detras de otro. */
+@keyframes carrusel-entrar {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.carrusel-entrar {
+  opacity: 0;
+  animation: carrusel-entrar 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+/* Barra que se llena mientras dura la diapositiva. */
+@keyframes carrusel-progreso {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.carrusel-progreso {
+  width: 0;
+  animation-name: carrusel-progreso;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+/* La imagen nitida se funde con el fondo hacia la izquierda (como un cine). */
+@media (min-width: 640px) {
+  .carrusel-mascara {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 35%);
+    mask-image: linear-gradient(to right, transparent 0%, black 35%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carrusel-entrar { animation: none; opacity: 1; }
+}

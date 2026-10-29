@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#6117ab" />
+  <title>Sin conexión · Cholets Turístico El Alto</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px; background: #f7f3fc; color: #2e0a54;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    .tarjeta {
+      max-width: 380px; width: 100%; background: #fff; border: 1px solid #ebe1f7;
+      border-radius: 20px; padding: 28px 24px; text-align: center;
+      box-shadow: 0 10px 30px rgba(97, 23, 171, 0.10);
+    }
+    img { width: 120px; height: auto; }
+    img.sin-red { display: block; width: 44px; margin: 14px auto 0; opacity: .55; }
+    h1 { font-size: 22px; margin: 16px 0 6px; }
+    p { margin: 0 0 18px; color: #6b4b8f; font-size: 15px; line-height: 1.45; }
+    button {
+      width: 100%; border: 0; border-radius: 999px; padding: 12px 18px; font-size: 15px; font-weight: 700;
+      color: #fff; background: linear-gradient(135deg, #7c2bd1, #6117ab); cursor: pointer;
+    }
+    .franja { height: 6px; border-radius: 6px; margin-top: 22px;
+      background: repeating-linear-gradient(90deg, #6117ab 0 18px, #e3a51c 18px 36px, #1f8a5b 36px 54px, #c2410c 54px 72px); }
+  </style>
+</head>
+<body>
+  <main class="tarjeta">
+    <img src="/imagenes/logos/logo-icono.png" alt="Cholets Turístico El Alto" />
+    <img class="sin-red" src="/iconos/wifi-off.png" alt="" />
+    <h1>Estás sin conexión</h1>
+    <p>No pudimos cargar la página porque no hay internet. Revisa tu WiFi o datos móviles e inténtalo otra vez.</p>
+    <button type="button" onclick="location.reload()">Reintentar</button>
+    <div class="franja" aria-hidden="true"></div>
+  </main>
+  <script>
+    // Cuando vuelve la conexion, se recarga sola.
+    window.addEventListener('online', function () { location.reload(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+modelo,tipo,n,aciertos,tiempo_ms
+qwen2.5:1.5b,fuera_de_tema,3,0.0000,4502
+qwen2.5:1.5b,ficha,51,0.6716,1471
+qwen2.5:1.5b,lista,6,0.3333,8371
+qwen2.5:1.5b,total,60,0.6042,2313
+cholets-qwen,fuera_de_tema,3,1.0000,2193
+cholets-qwen,ficha,51,1.0000,2166
+cholets-qwen,lista,6,1.0000,10150
+cholets-qwen,total,60,1.0000,2966

@@ -1,0 +1,353 @@
+// Prisma schema - PostgreSQL
+// Al usar Prisma Client, todas las consultas (findMany, create, update, etc.)
+// se compilan como consultas parametrizadas, NUNCA como concatenacion de strings.
+// Esto elimina la inyeccion SQL siempre que evitemos $queryRawUnsafe con datos de usuario.
+//
+// Las columnas usan snake_case en la base de datos real (via @map) mientras el
+// codigo TypeScript sigue usando camelCase. Esto coincide 1 a 1 con database/schema.sql.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  TURISTA
+  ANFITRION
+  OPERADOR
+  ADMIN
+
+  @@map("rol")
+}
+
+enum ProveedorAuth {
+  LOCAL
+  GOOGLE
+
+  @@map("proveedor_auth")
+}
+
+enum EstadoVerificacion {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+  // El operador pidio corregir algunas secciones (ver database/correcciones.sql).
+  CORRECCION
+
+  @@map("estado_verificacion")
+}
+
+model Usuario {
+  id               String        @id @default(uuid())
+  nombre           String
+  apellidoPaterno  String        @map("apellido_paterno")
+  apellidoMaterno  String?       @map("apellido_materno")
+  correo           String        @unique
+  passwordHash     String?       @map("password_hash")
+  proveedorAuth    ProveedorAuth @default(LOCAL) @map("proveedor_auth")
+  googleId         String?       @unique @map("google_id")
+  ci               String?       @unique
+  telefono         String?
+  // Datos para los reportes del Operador G.A.M.E.A. (database/auditoria_y_reportes.sql).
+  genero           String?
+  fechaNacimiento  DateTime?     @map("fecha_nacimiento") @db.Date
+  pais             String?
+  ciudad           String?
+  rol              Rol           @default(TURISTA)
+  avatarUrl        String?       @map("avatar_url")
+  // Verificacion de los datos del dueño por el operador (null = sin verificar).
+  datosVerificadosEn  DateTime? @map("datos_verificados_en")
+  datosVerificadosPor String?   @map("datos_verificados_por")
+  verificadoPor       Usuario?  @relation("VerificacionDatos", fields: [datosVerificadosPor], references: [id], onDelete: SetNull)
+  notaVerificacion    String?   @map("nota_verificacion")
+  // true = verificado con todas las licencias subidas: ya no se verifica otra vez.
+  verificacionCompleta Boolean  @default(false) @map("verificacion_completa")
+  creadoEn         DateTime      @default(now()) @map("creado_en")
+  actualizadoEn    DateTime      @updatedAt @map("actualizado_en")
+
+  locales                  Local[]              @relation("AnfitrionLocales")
+  verificacionesRealizadas VerificacionLocal[]   @relation("OperadorVerificaciones")
+  mensajesChat             MensajeChat[]
+  notificaciones           Notificacion[]
+  resenas                  Resena[]
+  datosQueVerifico         Usuario[]            @relation("VerificacionDatos")
+  eventosCreados           Evento[]             @relation("EventosCreados")
+  movimientos              Bitacora[]
+  denunciasHechas          Denuncia[]           @relation("DenunciasHechas")
+  denunciasRevisadas       Denuncia[]           @relation("DenunciasRevisadas")
+  favoritos                Favorito[]
+
+  @@map("usuarios")
+}
+
+model Zona {
+  id                      String  @id @default(uuid())
+  distritoNumero          Int     @unique @map("distrito_numero")
+  nombreZonaPrincipal     String  @map("nombre_zona_principal")
+  direccionSubalcaldia    String  @map("direccion_subalcaldia")
+  responsableSubalcaldia  String  @map("responsable_subalcaldia")
+  latitud                 Float?
+  longitud                Float?
+
+  locales Local[]
+
+  @@map("zonas")
+}
+
+model Local {
+  id                          String             @id @default(uuid())
+  nombre                      String
+  descripcion                 String
+  // Historia del cholet (opcional): como se construyo, por que y su tematica.
+  historia                    String?
+  // Seleccion multiple entre opciones fijas (ver src/locales/tipos-local.ts).
+  // Reemplaza a la vieja columna de texto libre "categoria", que sigue en la
+  // base (opcional, con su texto original) pero la aplicacion ya no usa.
+  tiposLocal                  String[]           @default([]) @map("tipos_local")
+  direccion                   String
+  latitud                     Float
+  longitud                    Float
+  zonaId                      String             @map("zona_id")
+  zona                        Zona               @relation(fields: [zonaId], references: [id])
+  anfitrionId                 String             @map("anfitrion_id")
+  anfitrion                   Usuario            @relation("AnfitrionLocales", fields: [anfitrionId], references: [id])
+  estado                      EstadoVerificacion @default(PENDIENTE)
+  // Texto armado por el backend a partir de dias + horas (ver src/locales/horario.ts).
+  horarioFuncionamiento       String?            @map("horario_funcionamiento")
+  diasFuncionamiento          String[]           @default([]) @map("dias_funcionamiento")
+  horaApertura                String?            @map("hora_apertura")
+  horaCierre                  String?            @map("hora_cierre")
+  documentoFuncionamientoUrl  String?            @map("documento_funcionamiento_url")
+  // Correccion pedida por el operador: secciones a corregir y su mensaje.
+  correccionSecciones         String[]           @default([]) @map("correccion_secciones")
+  correccionMensaje           String?            @map("correccion_mensaje")
+  // Ficha completa (database/ficha_completa_local.sql).
+  aforo                       Int?
+  servicios                   String[]           @default([])
+  foto360Url                  String?            @map("foto_360_url")
+  videoUrl                    String?            @map("video_url")
+  whatsapp                    String?
+  reglas                      String?
+  creadoEn                    DateTime           @default(now()) @map("creado_en")
+  actualizadoEn               DateTime           @updatedAt @map("actualizado_en")
+
+  fotos          FotoLocal[]
+  eventos        Evento[]
+  verificaciones VerificacionLocal[]
+  categorias     LocalCategoria[]
+  resenas        Resena[]
+  favoritos      Favorito[]
+  denuncias      Denuncia[]
+
+  @@map("locales")
+}
+
+// Locales que cada usuario marco con el corazon (database/favoritos.sql).
+model Favorito {
+  usuarioId String   @map("usuario_id")
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  localId   String   @map("local_id")
+  local     Local    @relation(fields: [localId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now()) @map("creado_en")
+
+  @@id([usuarioId, localId])
+  @@index([localId])
+  @@map("favoritos")
+}
+
+// Tipos de eventos que puede realizar un local (matrimonios, prestes, etc.).
+// Tablas creadas por database/categorias_evento.sql.
+model CategoriaEvento {
+  id            String @id @default(uuid())
+  grupo         String
+  nombre        String @unique
+  descripcion   String
+  palabrasClave String @default("") @map("palabras_clave")
+  orden         Int
+
+  locales LocalCategoria[]
+  eventos Evento[]
+
+  @@map("categorias_evento")
+}
+
+model LocalCategoria {
+  localId     String          @map("local_id")
+  local       Local           @relation(fields: [localId], references: [id], onDelete: Cascade)
+  categoriaId String          @map("categoria_id")
+  categoria   CategoriaEvento @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([localId, categoriaId])
+  @@map("locales_categorias")
+}
+
+model FotoLocal {
+  id        String   @id @default(uuid())
+  localId   String   @map("local_id")
+  local     Local    @relation(fields: [localId], references: [id], onDelete: Cascade)
+  url       String
+  esPortada Boolean  @default(false) @map("es_portada")
+  subidaEn  DateTime @default(now()) @map("subida_en")
+
+  @@map("fotos_local")
+}
+
+model Evento {
+  id          String    @id @default(uuid())
+  // Opcional: el operador puede publicar eventos sin local (con "lugar").
+  localId     String?   @map("local_id")
+  local       Local?    @relation(fields: [localId], references: [id], onDelete: Cascade)
+  lugar       String?
+  // Programacion: aparece desde / desaparece (y se borra) el.
+  publicarDesde DateTime? @map("publicar_desde")
+  publicarHasta DateTime? @map("publicar_hasta")
+  creadoPor   String?   @map("creado_por")
+  autor       Usuario?  @relation("EventosCreados", fields: [creadoPor], references: [id], onDelete: SetNull)
+  titulo      String
+  descripcion String
+  fechaInicio DateTime  @map("fecha_inicio")
+  fechaFin    DateTime? @map("fecha_fin")
+  // Imagen del afiche para la cartelera (opcional).
+  aficheUrl   String?   @map("afiche_url")
+  // Imagen horizontal (opcional) para el carrusel de la portada; el afiche es la vertical.
+  bannerUrl   String?   @map("banner_url")
+  // Categoria del evento (boda, graduacion, folklore...), opcional.
+  categoriaId String?   @map("categoria_id")
+  categoria   CategoriaEvento? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  creadoEn    DateTime  @default(now()) @map("creado_en")
+
+  @@map("eventos")
+}
+
+model VerificacionLocal {
+  id          String             @id @default(uuid())
+  localId     String             @map("local_id")
+  local       Local              @relation(fields: [localId], references: [id], onDelete: Cascade)
+  operadorId  String             @map("operador_id")
+  operador    Usuario            @relation("OperadorVerificaciones", fields: [operadorId], references: [id])
+  estado      EstadoVerificacion
+  comentario  String?
+  fecha       DateTime           @default(now())
+
+  @@map("verificaciones_local")
+}
+
+model Notificacion {
+  id        String   @id @default(uuid())
+  usuarioId String   @map("usuario_id")
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  titulo    String
+  mensaje   String
+  leida     Boolean  @default(false)
+  creadoEn  DateTime @default(now()) @map("creado_en")
+
+  @@map("notificaciones")
+}
+
+model MensajeChat {
+  id         String   @id @default(uuid())
+  usuarioId  String?  @map("usuario_id")
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  sesionId   String   @map("sesion_id")
+  rol        String
+  contenido  String
+  creadoEn   DateTime @default(now()) @map("creado_en")
+
+  @@map("mensajes_chat")
+}
+
+// Reseña de un visitante: 1 a 5 estrellas y comentario opcional. Una por
+// usuario y local (database/resenas.sql).
+model Resena {
+  id            String   @id @default(uuid())
+  localId       String   @map("local_id")
+  local         Local    @relation(fields: [localId], references: [id], onDelete: Cascade)
+  usuarioId     String   @map("usuario_id")
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  calificacion  Int      @db.SmallInt
+  comentario    String?
+  // Criterios opcionales (1 a 5).
+  atencion      Int?     @db.SmallInt
+  limpieza      Int?     @db.SmallInt
+  ubicacion     Int?     @db.SmallInt
+  precio        Int?     @db.SmallInt
+  ambiente      Int?     @db.SmallInt
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@unique([localId, usuarioId])
+  @@map("resenas")
+}
+
+// Codigo de 6 digitos de "Continuar con correo" (database/codigos_correo.sql).
+model CodigoCorreo {
+  correo     String   @id
+  codigoHash String   @map("codigo_hash")
+  expiraEn   DateTime @map("expira_en")
+  intentos   Int      @default(0) @db.SmallInt
+  creadoEn   DateTime @default(now()) @map("creado_en")
+
+  @@map("codigos_correo")
+}
+
+// Bitacora del sistema: quien hizo que en la aplicacion (la llena el backend).
+model Bitacora {
+  id            String   @id @default(uuid())
+  usuarioId     String?  @map("usuario_id")
+  usuario       Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuarioNombre String?  @map("usuario_nombre")
+  usuarioCorreo String?  @map("usuario_correo")
+  rol           String?
+  accion        String
+  modulo        String
+  entidadId     String?  @map("entidad_id")
+  detalle       String?
+  metodo        String?
+  ruta          String?
+  exito         Boolean  @default(true)
+  ip            String?
+  creadoEn      DateTime @default(now()) @map("creado_en")
+
+  @@index([creadoEn(sort: Desc)])
+  @@map("bitacora")
+}
+
+// Auditoria de la base de datos: la llenan disparadores de PostgreSQL con los
+// datos antes y despues de cada cambio (tambien los hechos fuera de la app).
+model AuditoriaBd {
+  id              BigInt   @id @default(autoincrement())
+  tabla           String
+  operacion       String
+  registroId      String?  @map("registro_id")
+  datosAntes      Json?    @map("datos_antes")
+  datosDespues    Json?    @map("datos_despues")
+  camposCambiados String[] @map("campos_cambiados")
+  usuarioBd       String   @default(dbgenerated("CURRENT_USER")) @map("usuario_bd")
+  usuarioApp      String?  @map("usuario_app")
+  creadoEn        DateTime @default(now()) @map("creado_en")
+
+  @@map("auditoria_bd")
+}
+
+// Denuncia de un local hecha por un visitante; la revisa el Operador G.A.M.E.A.
+model Denuncia {
+  id           String    @id @default(uuid())
+  localId      String    @map("local_id")
+  local        Local     @relation(fields: [localId], references: [id], onDelete: Cascade)
+  usuarioId    String?   @map("usuario_id")
+  usuario      Usuario?  @relation("DenunciasHechas", fields: [usuarioId], references: [id], onDelete: SetNull)
+  motivo       String
+  detalle      String?
+  estado       String    @default("PENDIENTE")
+  revisadoPor  String?   @map("revisado_por")
+  revisor      Usuario?  @relation("DenunciasRevisadas", fields: [revisadoPor], references: [id], onDelete: SetNull)
+  notaRevision String?   @map("nota_revision")
+  revisadoEn   DateTime? @map("revisado_en")
+  creadoEn     DateTime  @default(now()) @map("creado_en")
+
+  @@map("denuncias")
+}

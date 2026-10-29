@@ -1,0 +1,31 @@
+# Dependencias y compilados (se generan con npm install / npm run build)
+node_modules/
+dist/
+.next/
+.next-https/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secretos: NUNCA subir. Cada quien crea el suyo copiando el .env.example
+.env
+.env.local
+.env.*.local
+
+# Archivos subidos por los usuarios (fotos, licencias, CI): datos personales
+backend/uploads/
+
+# Certificados locales del modo https del celular
+frontend/certificados/
+
+# Modelo afinado y adaptador LoRA: pesan demasiado para GitHub (limite 100 MB).
+# Se comparten aparte (Releases de GitHub o Google Drive), ver README.md
+finetuning/*.gguf
+finetuning/resultados/*.zip
+
+# Copias de seguridad locales
+respaldos/
+
+# Sistema y editor
+*.log
+.DS_Store
+Thumbs.db

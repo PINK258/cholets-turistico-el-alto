@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" rx="12" fill="#f1e3ff"/>
+  <rect x="1" y="1" width="118" height="118" rx="11" fill="none" stroke="#cb9dff" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="60" y="54" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#6117ab">ESCUDO</text>
+  <text x="60" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#6117ab">GAMEA</text>
+  <text x="60" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#7620d1">reemplazar archivo</text>
+</svg>

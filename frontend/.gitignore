@@ -1,0 +1,7 @@
+node_modules/
+.next/
+.env.local
+*.log
+# Modo https para el celular (npm run certificado / dev:https)
+.next-https/
+certificados/
