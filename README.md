@@ -137,3 +137,9 @@ Todo el proceso (dataset, cuaderno de Google Colab, evaluación modelo base vs a
 | `npm` no se reconoce | Cierra y abre la terminal después de instalar Node.js. |
 | El puerto 3000 o 3001 está ocupado | Cierra la otra terminal donde ya corre el proyecto. |
 | El chatbot tarda mucho | La primera pregunta carga el modelo en memoria (10–20 s); las siguientes son rápidas. |
+
+## Autor
+
+**Rubén León Churata** — Proyecto de grado.
+
+Modelo afinado del chatbot (descarga): [Releases → v1.0](https://github.com/PINK258/cholets-turistico-el-alto/releases/latest)
